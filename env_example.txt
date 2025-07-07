@@ -4,4 +4,4 @@ TWILIO_AUTH_TOKEN=your_twilio_auth_token_here
 TWILIO_PHONE_NUMBER=+1234567890
 
 # Optional: Database configuration (for future use)
-DATABASE_URL=sqlite:///./medications.db 
+DATABASE_URL=sqlite:///./medications.db

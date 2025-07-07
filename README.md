@@ -207,4 +207,4 @@ The application logs all incoming messages and responses. Check the console outp
 
 ## License
 
-MIT License - feel free to use this for your medication management needs! 
+MIT License - feel free to use this for your medication management needs!
