@@ -1,0 +1,4 @@
+python-dotenv
+fastapi[standard-no-fastapi-cloud-cli]
+slack-bolt
+aiohttp
