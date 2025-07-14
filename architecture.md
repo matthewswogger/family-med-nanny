@@ -4,19 +4,8 @@
 
 This document describes the architecture of the Family Med Nanny service, a comprehensive platform for managing family medical needs and nanny services.
 
-<!-- ```mermaid
-architecture-beta
-    group api(logos:aws-lambda)[API]
-        service db(logos:aws-aurora)[Database] in api
-        service disk1(logos:aws-glacier)[Storage] in api
-        service disk2(logos:aws-s3)[Storage] in api
-        service server(logos:aws-ec2)[Server] in api
-            db:L -- R:server
-            disk1:T -- B:server
-            disk2:T -- B:db
-``` -->
 
-some words belong here.
+## High-Level Architecture
 
 ```mermaid
 architecture-beta
@@ -70,33 +59,6 @@ service ai("<img src='/Users/msmay/Documents/repos/family-med-nanny/pydantic_ai_
     %%group data(logos:aws-lambda)[Data Persistance]
 ```
 
-
-## High-Level Architecture
-
-```mermaid
-architecture-beta
-    Frontend Layer {
-        Slack Integration
-        WhatsApp Integration
-    }
-
-    Backend Services {
-        Authentication Service
-        User Management
-        Medical Records
-        Nanny Services
-        AI Assistant
-    }
-
-    Data Layer {
-        Database
-        Cache
-        File Storage
-    }
-
-    Frontend Layer --> Backend Services
-    Backend Services --> Data Layer
-```
 
 ## Service Components
 
