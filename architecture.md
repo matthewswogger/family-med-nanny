@@ -1,32 +1,32 @@
 # Family Med Nanny Service Architecture
 
+Keep this link handy: [](https://unpkg.com/@iconify-json/logos@1.2.4/icons.json)
+
 ## System Overview
-
-This document describes the architecture of the Family Med Nanny service, a comprehensive platform for managing family medical needs and nanny services.
-
-
-
+This document describes the architecture of the Family Med Nanny service, a comprehensive platform for managing family medical needs.
 
 ## High-Level Architecture
 ![High-Level Arcchitecture](mermaid_png_files/high_level_arch.png)
 
 <details>
 
-<summary>This hides a single Mermaid code block that github has issues rendering correctly. The above PNG is the correct representation of the diagram as it should render. Including a PNG of the diagram is an efficient solution. If you want to see the error, take a look.</summary>
+<summary>
+This hides a single Mermaid code block that github has issues rendering correctly. The above PNG is the correct representation of the diagram as it should render. Including a PNG of the diagram is an efficient solution. If you want to see the error, take a look.
+</summary>
 
 ```mermaid
+---
+config:
+  theme: neutral
+---
 architecture-beta
-
     service slack(logos:slack-icon)[Slack MedNannyAI]
-    service whatsapp(logos:whatsapp)
-    service twilio(logos:twilio)
+    service whatsapp(logos:whatsapp-icon)[WhatsApp MedNannyAI]
+    service twilio(logos:twilio-icon)[Twilio]
     service fastapi(logos:fastapi-icon)[API]
     service core(logos:python)[Core]
     service auth(logos:auth0-icon)[Authn Authz]
-
-    %%service ai(logos:medusa-icon)[MedNannyAI Assistant]
     service ai("<img src='https://avatars.githubusercontent.com/u/110818415' style='background-color:black;vertical-align:middle;margin:0px 0px'>")[MedNannyAI Assistant]
-
     service llm(logos:anthropic-icon)[LLM Provider]
     service db(logos:sqlite)
 
@@ -61,24 +61,24 @@ architecture-beta
 ### Frontend Layer
 - **Slack Integration**: Real-time messaging interface on mobile/desktop/web
 - **WhatsApp Integration**: Mobile messaging interface
+- **Twilio Integration**: SMS messages using webhooks
 
 ### Backend Services
 - **Authentication Service**: User authentication and authorization
 - **User Management**: User profiles and account management
 - **Medical Records**: Secure storage and management of medical information
-- **Nanny Services**: Nanny profiles, scheduling, and service management
 - **AI Assistant**: Intelligent assistance for medical queries and recommendations
 
 ### Data Layer
-- **Database**: PostgreSQL for structured data storage
-- **Cache**: Redis for session management and performance optimization
+- **Database**: sqlite for structured data storage
+- **Cache**: Redis (maybe?) for session management and performance optimization
 
-<<<<<<< HEAD
-
-=======
->>>>>>> feature/fastapi-module
 ## Data Flow
 ```mermaid
+---
+config:
+  theme: default
+---
 sequenceDiagram
     participant U as User
     participant F as Frontend
@@ -100,6 +100,10 @@ sequenceDiagram
 ## Security Architecture
 
 ```mermaid
+---
+config:
+  theme: neutral
+---
 flowchart TB
     subgraph "Data Protection"
         PII[PII Protection]
@@ -124,7 +128,15 @@ flowchart TB
 
 ## Deployment Architecture
 ```mermaid
-graph TB
+---
+config:
+  layout: elk
+  elk:
+    mergeEdges: false
+    nodePlacementStrategy: SIMPLE
+  theme: neutral
+---
+flowchart TB
     subgraph "Application Tier"
         App[Application Instance]
     end
@@ -157,7 +169,7 @@ graph TB
 ### Infrastructure
 - Docker
 - [Railway](https://railway.com/) for deployment and monitoring
-- [Twilio](https://www.twilio.com/) for communication using mobile phone numbers
+- [Twilio](https://www.twilio.com/) for **SMS Integration** uses webhooks to handle incoming/outgoing SMS messages
 - Single server deployment
 
 ### Monitoring
