@@ -1,0 +1,4 @@
+python-dotenv==1.1.1
+fastapi[standard-no-fastapi-cloud-cli]
+pydantic-ai-slim[openai,anthropic,logfire,evals,duckduckgo,tavily]
+logfire[fastapi]
