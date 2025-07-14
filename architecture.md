@@ -8,7 +8,7 @@ This document describes the architecture of the Family Med Nanny service, a comp
 
 
 ## High-Level Architecture
-![High-Level Arcchitecture](mermaid_png_files/hopping_this_works.png)
+![High-Level Arcchitecture](mermaid_png_files/high_level_arch.png)
 
 <details>
 
@@ -17,29 +17,18 @@ This document describes the architecture of the Family Med Nanny service, a comp
 ```mermaid
 architecture-beta
 
-    service slack(logos:slack-icon)[Slack MedNannyAI]%% in frontend
-    service whatsapp(logos:whatsapp)%% in twilio_whatsapp
-    service twilio(logos:twilio)%% in twilio_whatsapp
-    service fastapi(logos:fastapi-icon)[API]%% in backend
-    service core(logos:python)[Core]%% in backend
-    %%service auth(logos:auth0-icon)[Authentication] in backend
+    service slack(logos:slack-icon)[Slack MedNannyAI]
+    service whatsapp(logos:whatsapp)
+    service twilio(logos:twilio)
+    service fastapi(logos:fastapi-icon)[API]
+    service core(logos:python)[Core]
+    service auth(logos:auth0-icon)[Authn Authz]
 
+    %%service ai(logos:medusa-icon)[MedNannyAI Assistant]
+    service ai("<img src='https://avatars.githubusercontent.com/u/110818415' style='background-color:black;vertical-align:middle;margin:0px 0px'>")[MedNannyAI Assistant]
 
-service one("<img src='https://avatars.githubusercontent.com/u/110818415'>")[one]
-service two("<img src='/Users/msmay/Documents/repos/family-med-nanny/pydantic_ai_dark.png'>")[two]
-service two2("<img src='/Users/msmay/Documents/repos/family-med-nanny/pydantic_ai_dark.png' width=500 height=50 style='vertical-align:middle;margin:0px 0px'>")[two2]
-service three("<img src='https://raw.githubusercontent.com/mingrammer/diagrams/master/assets/img/diagrams.png'>")[three]
-
-
-    %%service ai(logos:medusa-icon)[AI Assistant]%% in backend
-    %%service ai("<img src='https://ai.pydantic.dev/img/pydantic-ai-light.svg'>")[Assistant]%% in backend
-service ai("<img src='/Users/msmay/Documents/repos/family-med-nanny/pydantic_ai_dark.png'>")[Assistant]%% in backend
-    %%service ai("<img src='https://avatars.githubusercontent.com/u/110818415' style='background-color: grey; border: 10px solid black;'>")[Assistant]%% in backend
-
-
-
-
-    service db(logos:sqlite)%% in data
+    service llm(logos:anthropic-icon)[LLM Provider]
+    service db(logos:sqlite)
 
     junction frontendcenter
     junction frontendleft
@@ -51,11 +40,11 @@ service ai("<img src='/Users/msmay/Documents/repos/family-med-nanny/pydantic_ai_
     frontendleft:R -- L:frontendcenter
     frontendcenter:R -- L:frontendright
     fastapi:B --> T:core
+    fastapi:R --> L:auth
     core:L --> R:ai
+    ai:L --> R:llm
     frontendcenter:B -- T:fastapi
     core:B --> T:db
-
-
 
     %%group frontend(cloud)[MedNannyAI Frontend]
     %%group twilio_whatsapp(logos:whatsapp-icon)[WhatsApp MedNannyAI] in frontend
