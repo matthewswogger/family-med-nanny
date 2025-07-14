@@ -5,8 +5,6 @@
 This document describes the architecture of the Family Med Nanny service, a comprehensive platform for managing family medical needs and nanny services.
 
 
-
-
 ## High-Level Architecture
 ![High-Level Arcchitecture](mermaid_png_files/high_level_arch.png)
 
@@ -72,7 +70,6 @@ architecture-beta
 ### Data Layer
 - **Database**: PostgreSQL for structured data storage
 - **Cache**: Redis for session management and performance optimization
-
 
 ## Data Flow
 ```mermaid

@@ -12,7 +12,6 @@ app = App(
     signing_secret=os.environ.get('SLACK_SIGNING_SECRET')
 )
 SLACK_HANDLER = SlackRequestHandler(app)
-    # SocketModeHandler(app, os.environ.get("SLACK_APP_TOKEN")).start()
 
 @app.command('/hey')
 def handle_hey_command(ack, say, command, logger):
