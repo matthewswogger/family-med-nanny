@@ -4,6 +4,15 @@
 
 This document describes the architecture of the Family Med Nanny service, a comprehensive platform for managing family medical needs and nanny services.
 
+```mermaid
+architecture-beta
+
+    service slack(logos:slack-icon)[Slack MedNannyAI]%% in frontend
+    service whatsapp(logos:whatsapp)%% in twilio_whatsapp
+    service twilio(logos:twilio)%% in twilio_whatsapp
+    service fastapi(logos:fastapi-icon)[API]%% in backend
+    service core(logos:python)[Core]
+```
 
 ## High-Level Architecture
 
@@ -63,8 +72,8 @@ service ai("<img src='/Users/msmay/Documents/repos/family-med-nanny/pydantic_ai_
 ## Service Components
 
 ### Frontend Layer
-- **Slack Integration**: Real-time messaging interface for families and nannies
-- **WhatsApp Integration**: Mobile messaging interface for families and nannies
+- **Slack Integration**: Real-time messaging interface on mobile/desktop/web
+- **WhatsApp Integration**: Mobile messaging interface
 
 ### Backend Services
 - **Authentication Service**: User authentication and authorization
@@ -76,11 +85,9 @@ service ai("<img src='/Users/msmay/Documents/repos/family-med-nanny/pydantic_ai_
 ### Data Layer
 - **Database**: PostgreSQL for structured data storage
 - **Cache**: Redis for session management and performance optimization
-- **File Storage**: Secure storage for documents and medical records
 
 
 ## Data Flow
-
 ```mermaid
 sequenceDiagram
     participant U as User
@@ -126,7 +133,6 @@ flowchart TB
 ```
 
 ## Deployment Architecture
-
 ```mermaid
 graph TB
     subgraph "Application Tier"
@@ -152,19 +158,21 @@ graph TB
 - WhatsApp Business API
 
 ### Backend
-- FastAPI (Python)
-- PostgreSQL
-- Redis
-- Celery (for background tasks)
+- FastAPI
+- sqlite
+- Pydantic AI
+- Anthropic and/or OpenAI
+- Redis (maybe, probably in memory caching or just go with sql db caching...it's fast enough)
 
 ### Infrastructure
 - Docker
+- [Railway](https://railway.com/) for deployment and monitoring
+- [Twilio](https://www.twilio.com/) for communication using mobile phone numbers
 - Single server deployment
 
 ### Monitoring
-- Prometheus
-- Grafana
-- ELK Stack
+- [Railway](https://railway.com/) should give me what I need for something of this scope out of the box.
+
 
 ## Next Steps
 
