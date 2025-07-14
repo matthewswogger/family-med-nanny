@@ -73,7 +73,10 @@ architecture-beta
 - **Database**: PostgreSQL for structured data storage
 - **Cache**: Redis for session management and performance optimization
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> feature/fastapi-module
 ## Data Flow
 ```mermaid
 sequenceDiagram
