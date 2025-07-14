@@ -12,6 +12,7 @@ architecture-beta
     service twilio(logos:twilio)%% in twilio_whatsapp
     service fastapi(logos:fastapi-icon)[API]%% in backend
     service core(logos:python)[Core]
+    service two2("<img src='pydantic_ai_dark.png'>")[two2]
 ```
 
 ## High-Level Architecture
