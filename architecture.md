@@ -4,15 +4,19 @@
 
 This document describes the architecture of the Family Med Nanny service, a comprehensive platform for managing family medical needs and nanny services.
 
+![High-Level Arcchitecture](mermaid_png_files/hopping_this_works.png)
+
+is there text here
+
 ```mermaid
 architecture-beta
-
     service slack(logos:slack-icon)[Slack MedNannyAI]%% in frontend
     service whatsapp(logos:whatsapp)%% in twilio_whatsapp
     service twilio(logos:twilio)%% in twilio_whatsapp
     service fastapi(logos:fastapi-icon)[API]%% in backend
     service core(logos:python)[Core]
-    service two2("<img src='pydantic_ai_dark.png'>")[two2]
+    service two2("<img src='https://avatars.githubusercontent.com/u/110818415'>")[two2]
+
 ```
 
 ## High-Level Architecture
