@@ -81,12 +81,6 @@ service ai("<img src='/Users/msmay/Documents/repos/family-med-nanny/pydantic_ai_
 
 ## Data Flow
 
-<!-- ---
-config:
-    theme: redux-dark-color
---- -->
-
-
 ```mermaid
 sequenceDiagram
     participant U as User
@@ -108,44 +102,28 @@ sequenceDiagram
 
 ## Security Architecture
 
-<div style="display: flex; justify-content: space-between;">
-<div style="flex: 1; margin-right: 20px;">
-
-### Security Layers
-
 ```mermaid
-graph LR
+flowchart TB
+    subgraph "Data Protection"
+        PII[PII Protection]
+        HIPAA[HIPAA Compliance]
+        GDPR[GDPR Compliance]
+        direction TB
+        PII-->HIPAA
+        HIPAA-->GDPR
+    end
+
     subgraph "Security Layers"
         Auth[Authentication]
         Authz[Authorization]
         Encrypt[Encryption]
         Audit[Audit Logging]
+        direction TB
+        Auth-->Authz
+        Authz-->Encrypt
+        Encrypt-->Audit
     end
-
-    Auth --> Authz
-    Authz --> Encrypt
-    Encrypt --> Audit
 ```
-
-</div>
-<div style="flex: 1;">
-
-### Data Protection
-
-```mermaid
-graph LR
-    subgraph "Data Protection"
-        PII[PII Protection]
-        HIPAA[HIPAA Compliance]
-        GDPR[GDPR Compliance]
-    end
-
-    PII --> HIPAA
-    HIPAA --> GDPR
-```
-
-</div>
-</div>
 
 ## Deployment Architecture
 
