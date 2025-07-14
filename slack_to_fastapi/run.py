@@ -7,7 +7,9 @@ load_dotenv()
 
 if __name__ == '__main__':
     uvicorn.run(
-        'fastapi_app.main:api',
+        'fastapi_app.main:app',
+        host='127.0.0.1',
+        port=8000,
         reload=True,
-        reload_dirs=[str(Path(__file__).parent)]
+        reload_dirs=[str(Path(__file__).parent)],
     )
