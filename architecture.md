@@ -4,22 +4,15 @@
 
 This document describes the architecture of the Family Med Nanny service, a comprehensive platform for managing family medical needs and nanny services.
 
-![High-Level Arcchitecture](mermaid_png_files/hopping_this_works.png)
 
-is there text here
 
-```mermaid
-architecture-beta
-    service slack(logos:slack-icon)[Slack MedNannyAI]%% in frontend
-    service whatsapp(logos:whatsapp)%% in twilio_whatsapp
-    service twilio(logos:twilio)%% in twilio_whatsapp
-    service fastapi(logos:fastapi-icon)[API]%% in backend
-    service core(logos:python)[Core]
-    service two2("<img src='https://avatars.githubusercontent.com/u/110818415'>")[two2]
-
-```
 
 ## High-Level Architecture
+![High-Level Arcchitecture](mermaid_png_files/hopping_this_works.png)
+
+<details>
+
+<summary>This hides a single Mermaid code block that github has issues rendering correctly. The above PNG is the correct representation of the diagram as it should render. Including a PNG of the diagram is an efficient solution. If you want to see the error, take a look.</summary>
 
 ```mermaid
 architecture-beta
@@ -72,7 +65,7 @@ service ai("<img src='/Users/msmay/Documents/repos/family-med-nanny/pydantic_ai_
     %%whatsapp{group}:B -- T:fastapi{group}
     %%group data(logos:aws-lambda)[Data Persistance]
 ```
-
+</details>
 
 ## Service Components
 
