@@ -106,23 +106,16 @@ config:
 ---
 flowchart TB
     subgraph "Data Protection"
-        PII[PII Protection]
-        HIPAA[HIPAA Compliance]
-        GDPR[GDPR Compliance]
         direction TB
-        PII-->HIPAA
-        HIPAA-->GDPR
+        PII(PII Protection)-->HIPAA(HIPAA Compliance)
+        HIPAA-->GDPR(GDPR Compliance)
     end
 
     subgraph "Security Layers"
-        Auth[Authentication]
-        Authz[Authorization]
-        Encrypt[Encryption]
-        Audit[Audit Logging]
         direction TB
-        Auth-->Authz
-        Authz-->Encrypt
-        Encrypt-->Audit
+        Auth(Authentication)-->Authz(Authorization)
+        Authz-->Encrypt(Encryption)
+        Encrypt-->Audit(Audit Logging)
     end
 ```
 
@@ -137,20 +130,17 @@ config:
   theme: neutral
 ---
 flowchart TB
-    subgraph "Application Tier"
-        App[Application Instance]
+    subgraph "Application Layer"
+        Application
     end
 
-    subgraph "Database Tier"
+    subgraph "Data Layer"
         DB[(Database)]
-    end
-
-    subgraph "Cache Tier"
         Cache[(Cache)]
     end
 
-    App --> DB
-    App --> Cache
+    Application --> DB
+    Application --> Cache
 ```
 
 ## Technology Stack

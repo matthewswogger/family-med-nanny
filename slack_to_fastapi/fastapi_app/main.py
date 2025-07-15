@@ -29,4 +29,6 @@ async def slack_events(req: Request):
     # bod = await req.body()
     # parsed_bod = parse_req_body(bod)
 
+    # print(f'\n\nreq:\n {parsed_bod}\n\n', flush=True)
+
     return await SLACK_HANDLER.handle(req)

@@ -4,7 +4,7 @@ from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
 import re
 
-from med_nannyai import MedNannyAI
+from med_nannyai import MedNannyAI, agent
 
 
 med_nannyai = MedNannyAI()
@@ -29,18 +29,21 @@ def block_buster(event: dict):
     return block_elements
 
 
-
-def parse_slack_mentions(text: str) -> dict[str, list[str | None]]:
+def parse_slack_mentions(text: str) -> tuple[list[str | None], list[str | None]]:
     # matches this: <@USER_ID> or <@USER_ID|display_name>
     user_matches = set(re.findall(r'<@([A-Z0-9]+)(?:\|[^>]*)?>', text))
 
     # matches this: <#CHANNEL_ID> or <#CHANNEL_ID|channel_name>
     channel_matches = set(re.findall(r'<#([A-Z0-9]+)(?:\|[^>]*)?>', text))
 
-    return {
-        'referred_to_user_id': list(user_matches) or [],
-        'referred_to_channel_id': list(channel_matches) or []
-    }
+    return list(user_matches) or [], list(channel_matches) or []
+
+
+def replace_multiple_substrings(text: str, replacements: dict[str, str]) -> str:
+    result = text
+    for old, new in replacements.items():
+        result = result.replace(old, new)
+    return result
 
 
 
@@ -50,14 +53,12 @@ def handle_hey_command(ack, command, client, context, logger):
     ack()
     # ack(f"Hi <@{command['user_id']}>!")
 
-
     # 1) get the things you need from `command`, `context`
     user_text = command.get('text')
+    user_mentions, channel_mentions = parse_slack_mentions(user_text)
     channel_id = command.get('channel_id')
 
-
     # 2) use `MedNannyAI` to craft what will be said to the user etc
-
 
 
     # 3) send whatever message you need to to the user
@@ -71,32 +72,40 @@ def handle_hey_command(ack, command, client, context, logger):
 
 @app.event('message')
 def handle_message_events(event, client, context, logger):
-
     # 1) get the things you need from `event`, `context`
     channel_id = event.get('channel')
+
     user_text = event.get('text')
+    user_mentions, channel_mentions = parse_slack_mentions(user_text)
 
-    block = event.get('blocks')[0]
-    block_elements = block.get('elements')[0].get('elements')
+    user_name_map = lambda x: f'<@{x}>'
+    channel_name_map = lambda x: f'<#{x}|>'
 
+    slack_user_names_map = {
+        user_name_map('U0957BCUP7S'): 'Matthew May',
+    }
+    slack_channel_names_map = {
+        channel_name_map('C0957BD4UFJ'): '#social',
+        channel_name_map('C0957BD49H6'): '#all-day-of-may'
+    }
+    llm_user_text = replace_multiple_substrings(user_text, slack_user_names_map)
+    llm_user_text = replace_multiple_substrings(llm_user_text, slack_channel_names_map)
 
     # 2) use `MedNannyAI` to craft what will be said to the user etc
-
+    agent_response = agent.run_sync(llm_user_text)
 
 
     # 3) send whatever message you need to to the user
     response = client.chat_postMessage(
         channel=channel_id,
-        text=f'Here is what I got for you: {user_text}',
+        text=agent_response.output,
     )
     # response = client.chat_postEphemeral(
     #     channel=channel_id,
     #     user=user_id,
-    #     text=f'Here is what I got for you: {user_text}',
+    #     text=agent_response.output,
     # )
     logger.info(f'\n\nmessage:\n {event}\n\n')
-
-
 
 
 # client.chat_postMessage : Sends a message to a channel.

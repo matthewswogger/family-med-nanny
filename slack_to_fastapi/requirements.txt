@@ -2,3 +2,5 @@ python-dotenv
 fastapi[standard-no-fastapi-cloud-cli]
 slack-bolt
 aiohttp
+pydantic-ai-slim[openai,anthropic,logfire,evals,duckduckgo,tavily]
+logfire[fastapi,httpx]
