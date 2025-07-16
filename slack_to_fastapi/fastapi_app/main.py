@@ -1,10 +1,29 @@
 from fastapi import FastAPI, Request
-from urllib.parse import parse_qsl
-import json
 import logging
 
-# from slack_app.main import SLACK_HANDLER
 from slack_app import SLACK_HANDLER
+
+
+app = FastAPI()
+
+@app.get('/')
+async def root():
+    return {'message': 'Hello World'}
+
+@app.post('/slack/events')
+async def slack_events(req: Request):
+    return await SLACK_HANDLER.handle(req)
+
+##################################################################
+# If I need to work with the raw request I'll use the below code.
+# Sor far I don't need to and don't see needing it in the future.
+##################################################################
+# from fastapi import FastAPI, Request
+# from urllib.parse import parse_qsl
+# import json
+# import logging
+
+# from slack_app import SLACK_HANDLER
 
 
 # def parse_req_body(bytes_data):
@@ -16,19 +35,18 @@ from slack_app import SLACK_HANDLER
 #     return {k: v for k, v in parse_qsl(decoded)}
 
 
+# app = FastAPI()
 
-app = FastAPI()
-
-@app.get('/')
-async def root():
-    return {'message': 'Hello World'}
+# @app.get('/')
+# async def root():
+#     return {'message': 'Hello World'}
 
 
-@app.post('/slack/events')
-async def slack_events(req: Request):
-    # bod = await req.body()
-    # parsed_bod = parse_req_body(bod)
+# @app.post('/slack/events')
+# async def slack_events(req: Request):
+#     bod = await req.body()
+#     parsed_bod = parse_req_body(bod)
 
-    # print(f'\n\nreq:\n {parsed_bod}\n\n', flush=True)
+#     print(f'\n\nreq:\n {parsed_bod}\n\n', flush=True)
 
-    return await SLACK_HANDLER.handle(req)
+#     return await SLACK_HANDLER.handle(req)

@@ -1,185 +1,178 @@
-# Medication Management SMS API
+# Family Med Nanny Service Architecture
 
-A FastAPI backend service that allows users to manage their medications via SMS using Twilio. Users can add medications, log when they take them, and view their medication history through simple text messages.
+Keep this link handy: [](https://unpkg.com/@iconify-json/logos@1.2.4/icons.json)
 
-## Features
+## System Overview
+This document describes the architecture of the Family Med Nanny service, a comprehensive platform for managing family medical needs.
 
-- 📱 **SMS Integration**: Manage medications through text messages
-- 💊 **Medication Tracking**: Add, log, and track medications
-- 📅 **Daily Logs**: View today's medication history
-- 🤖 **Natural Language**: Understand both structured commands and natural language
-- 🔍 **Debug Endpoints**: API endpoints to view data for debugging
+## High-Level Architecture
+![High-Level Arcchitecture](mermaid_png_files/high_level_arch.png)
 
-## Setup Instructions
+<details>
 
-### 1. Install Dependencies
+<summary>
+This hides a single Mermaid code block that github has issues rendering correctly. The above PNG is the correct representation of the diagram as it should render. Including a PNG of the diagram is an efficient solution. If you want to see the error, take a look.
+</summary>
 
-```bash
-pip install -r requirements.txt
+```mermaid
+---
+config:
+  theme: neutral
+---
+architecture-beta
+    service slack(logos:slack-icon)[Slack MedNannyAI]
+    service whatsapp(logos:whatsapp-icon)[WhatsApp MedNannyAI]
+    service twilio(logos:twilio-icon)[Twilio]
+    service fastapi(logos:fastapi-icon)[API]
+    service core(logos:python)[Core]
+    service auth(logos:auth0-icon)[Authn Authz]
+    service ai("<img src='https://avatars.githubusercontent.com/u/110818415' style='background-color:black;vertical-align:middle;margin:0px 0px'>")[MedNannyAI Assistant]
+    service llm(logos:anthropic-icon)[LLM Provider]
+    service db(logos:sqlite)
+
+    junction frontendcenter
+    junction frontendleft
+    junction frontendright
+
+    whatsapp:L <-- R:twilio
+    frontendleft:T -- B:slack
+    frontendright:T -- B:twilio
+    frontendleft:R -- L:frontendcenter
+    frontendcenter:R -- L:frontendright
+    fastapi:B --> T:core
+    fastapi:R --> L:auth
+    core:L --> R:ai
+    ai:L --> R:llm
+    frontendcenter:B -- T:fastapi
+    core:B --> T:db
+
+    %%group frontend(cloud)[MedNannyAI Frontend]
+    %%group twilio_whatsapp(logos:whatsapp-icon)[WhatsApp MedNannyAI] in frontend
+    %%group backend(logos:fastapi-icon)[MedNannyAI API Backend]
+    %%frontendCenter:B -- T:fastapi{group}
+    %%slack{group}:B -- T:fastapi{group}
+    %%whatsapp{group}:B -- T:fastapi{group}
+    %%group data(logos:aws-lambda)[Data Persistance]
+```
+</details>
+
+## Service Components
+
+### Frontend Layer
+- **Slack Integration**: Real-time messaging interface on mobile/desktop/web
+- **WhatsApp Integration**: Mobile messaging interface
+- **Twilio Integration**: SMS messages using webhooks
+
+### Backend Services
+- **Authentication Service**: User authentication and authorization
+- **User Management**: User profiles and account management
+- **Medical Records**: Secure storage and management of medical information
+- **AI Assistant**: Intelligent assistance for medical queries and recommendations
+
+### Data Layer
+- **Database**: sqlite for structured data storage
+- **Cache**: Redis (maybe?) for session management and performance optimization
+
+## Data Flow
+```mermaid
+---
+config:
+  theme: default
+---
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant S as Backend Service
+    participant D as Database
+    participant E as External Service
+
+    U->>F: User Action
+    F->>S: API Request
+    S->>S: Authenticate & Authorize
+    S->>D: Query/Update Data
+    D-->>S: Response
+    S->>E: External Service Call (if needed)
+    E-->>S: External Response
+    S-->>F: API Response
+    F-->>U: Update UI
 ```
 
-### 2. Set Up Twilio Account
+## Security Architecture
 
-1. Go to [Twilio Console](https://console.twilio.com/)
-2. Sign up for a free account
-3. Get a phone number for SMS
-4. Note your Account SID and Auth Token
+```mermaid
+---
+config:
+  theme: neutral
+---
+flowchart TB
+    subgraph "Data Protection"
+        direction TB
+        PII(PII Protection)-->HIPAA(HIPAA Compliance)
+        HIPAA-->GDPR(GDPR Compliance)
+    end
 
-### 3. Configure Environment Variables
-
-Create a `.env` file in the project root:
-
-```bash
-# Copy the example file
-cp env_example.txt .env
+    subgraph "Security Layers"
+        direction TB
+        Auth(Authentication)-->Authz(Authorization)
+        Authz-->Encrypt(Encryption)
+        Encrypt-->Audit(Audit Logging)
+    end
 ```
 
-Edit `.env` with your Twilio credentials:
+## Deployment Architecture
+```mermaid
+---
+config:
+  layout: elk
+  elk:
+    mergeEdges: false
+    nodePlacementStrategy: SIMPLE
+  theme: neutral
+---
+flowchart TB
+    subgraph "Application Layer"
+        Application
+    end
 
-```env
-TWILIO_ACCOUNT_SID=your_twilio_account_sid_here
-TWILIO_AUTH_TOKEN=your_twilio_auth_token_here
-TWILIO_PHONE_NUMBER=+1234567890
+    subgraph "Data Layer"
+        DB[(Database)]
+        Cache[(Cache)]
+    end
+
+    Application --> DB
+    Application --> Cache
 ```
 
-### 4. Run the Application
+## Technology Stack
 
-```bash
-# Development
-python app.py
+### Frontend
+- Slack API Integration
+- WhatsApp Business API
 
-# Or using uvicorn directly
-uvicorn app:app --reload --host 0.0.0.0 --port 8000
-```
+### Backend
+- FastAPI
+- sqlite
+- Pydantic AI
+- Anthropic and/or OpenAI
+- Redis (maybe, probably in memory caching or just go with sql db caching...it's fast enough)
 
-### 5. Configure Twilio Webhook
+### Infrastructure
+- Docker
+- [Railway](https://railway.com/) for deployment and monitoring
+- [Twilio](https://www.twilio.com/) for **SMS Integration** uses webhooks to handle incoming/outgoing SMS messages
+- Single server deployment
 
-1. Go to your Twilio phone number settings
-2. Set the webhook URL for incoming messages to:
-   ```
-   https://your-domain.com/webhook/sms
-   ```
-3. Make sure your server is publicly accessible (use ngrok for local development)
+### Monitoring
+- [Railway](https://railway.com/) should give me what I need for something of this scope out of the box.
 
-## Usage Examples
 
-### Adding Medications
+## Next Steps
 
-```
-ADD aspirin 81mg daily
-ADD metformin 500mg twice daily
-ADD blood pressure med 10mg morning
-```
-
-### Logging Medications Taken
-
-```
-TAKE aspirin
-I took my metformin
-Just took blood pressure med
-```
-
-### Viewing Information
-
-```
-LIST          # Show all medications
-TODAY         # Show today's taken medications
-HELP          # Show available commands
-```
-
-## API Endpoints
-
-### SMS Webhook
-- **POST** `/webhook/sms` - Handles incoming SMS messages from Twilio
-
-### Debug Endpoints
-- **GET** `/` - Health check
-- **GET** `/medications/{phone_number}` - Get medications for a phone number
-- **GET** `/logs/{phone_number}` - Get medication logs for a phone number
-
-## Local Development with ngrok
-
-For local development, use ngrok to expose your local server:
-
-```bash
-# Install ngrok
-# Download from https://ngrok.com/
-
-# Start your FastAPI server
-python app.py
-
-# In another terminal, expose your local server
-ngrok http 8000
-
-# Use the ngrok URL as your Twilio webhook
-# Example: https://abc123.ngrok.io/webhook/sms
-```
-
-## Message Parsing
-
-The system understands both structured commands and natural language:
-
-### Structured Commands
-- `ADD [medication] [dosage] [frequency]`
-- `TAKE [medication]`
-- `LIST`
-- `TODAY`
-- `HELP`
-
-### Natural Language
-- "I took my aspirin"
-- "Just took blood pressure medication"
-- "Took metformin"
-
-## Data Storage
-
-Currently uses in-memory storage. For production, consider:
-
-1. **SQLite**: Simple file-based database
-2. **PostgreSQL**: Robust relational database
-3. **MongoDB**: Document-based storage
-
-## Security Considerations
-
-- Validate phone numbers
-- Implement rate limiting
-- Add authentication for admin endpoints
-- Encrypt sensitive health data
-- Follow HIPAA guidelines if applicable
-
-## Production Deployment
-
-### Using Heroku
-
-1. Create a Heroku app
-2. Set environment variables in Heroku dashboard
-3. Deploy using Git
-
-```bash
-heroku create your-app-name
-heroku config:set TWILIO_ACCOUNT_SID=your_sid
-heroku config:set TWILIO_AUTH_TOKEN=your_token
-heroku config:set TWILIO_PHONE_NUMBER=your_number
-git push heroku main
-```
-
-### Using Railway
-
-1. Connect your GitHub repository
-2. Set environment variables
-3. Deploy automatically
-
-## Testing
-
-Test the API locally:
-
-```bash
-# Test health endpoint
-curl http://localhost:8000/
-
-# Test medication endpoint (replace with actual phone number)
-curl http://localhost:8000/medications/+1234567890
-```
+This architecture will be iteratively refined based on:
+1. Specific requirements gathering
+2. Performance requirements
+3. Security requirements
+4. Integration requirements
 
 ## Future Enhancements
 
@@ -191,19 +184,6 @@ curl http://localhost:8000/medications/+1234567890
 - [ ] Export functionality
 - [ ] Photo logging
 - [ ] Integration with health apps
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Webhook not receiving messages**: Check if your server is publicly accessible
-2. **Environment variables not loading**: Make sure `.env` file is in the project root
-3. **Twilio authentication errors**: Verify your Account SID and Auth Token
-4. **Port already in use**: Change the port in `app.py` or kill the process using the port
-
-### Logs
-
-The application logs all incoming messages and responses. Check the console output for debugging information.
 
 ## License
 
