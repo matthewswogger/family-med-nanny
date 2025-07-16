@@ -17,7 +17,8 @@ This hides a single Mermaid code block that github has issues rendering correctl
 ```mermaid
 ---
 config:
-  theme: neutral
+  theme: dark
+  # theme: neutral
 ---
 architecture-beta
     service slack(logos:slack-icon)[Slack MedNannyAI]
@@ -77,7 +78,8 @@ architecture-beta
 ```mermaid
 ---
 config:
-  theme: default
+  theme: dark
+  # theme: neutral
 ---
 sequenceDiagram
     participant U as User
@@ -102,7 +104,8 @@ sequenceDiagram
 ```mermaid
 ---
 config:
-  theme: neutral
+  theme: dark
+  # theme: neutral
 ---
 flowchart TB
     subgraph "Data Protection"
@@ -127,7 +130,8 @@ config:
   elk:
     mergeEdges: false
     nodePlacementStrategy: SIMPLE
-  theme: neutral
+  theme: dark
+  # theme: neutral
 ---
 flowchart TB
     subgraph "Application Layer"
