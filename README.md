@@ -1,9 +1,11 @@
 # Family Med Nanny Service Architecture
 
-Keep this link handy: [](https://unpkg.com/@iconify-json/logos@1.2.4/icons.json)
+`TODO`: Description of the application...
 
 ## System Overview
 This document describes the architecture of the Family Med Nanny service, a comprehensive platform for managing family medical needs.
+
+Keep this link handy: [Icons for mermaid architecture diagrams](https://unpkg.com/@iconify-json/logos@1.2.4/icons.json)
 
 ## High-Level Architecture
 ![High-Level Arcchitecture](mermaid_png_files/high_level_arch.png)
