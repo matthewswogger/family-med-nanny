@@ -1,11 +1,12 @@
-import asyncio
-from datetime import datetime, date
+from datetime import date#, datetime
 from dataclasses import dataclass
-from pydantic import BaseModel, Field
-from pydantic_ai import Agent, RunContext, Tool
+from pydantic import Field
+from pydantic_ai import Agent, RunContext, ImageUrl
 import logfire
 
-# from slack_to_fastapi.med_nannyai import medication_journal
+from .medication_journal import MedicationJournal, MedicationJournalEntry
+from .prescription_extraction import read_label_medication_bottle
+
 
 logfire.configure()
 logfire.instrument_pydantic_ai()
@@ -27,36 +28,6 @@ class MedNannyAI:
 ########################################################################
 
 @dataclass
-class MedicationJournalEntry:
-    medication_name: str = Field(description='The name of the medication')
-    medication_frequency: str = Field(description='The frequency of the medication')
-    medication_start_date: str = Field(description='The start date of the medication')
-    medication_end_date: str | None = Field(default=None, description='The end date of the medication')
-    medication_notes: str | None = Field(default=None, description='Any notes about the medication')
-
-class MedicationJournal:
-    entries: dict[int, list[MedicationJournalEntry]] = {}
-
-    @classmethod
-    def add_entry(cls, user_id: int, entry: MedicationJournalEntry):
-        if user_id not in cls.entries:
-            cls.entries[user_id] = []
-        cls.entries[user_id].append(entry)
-
-    @classmethod
-    def get_entry(cls, user_id: int, index: int) -> MedicationJournalEntry | None:
-        if user_id not in cls.entries or index >= len(cls.entries[user_id]):
-            return None
-        return cls.entries[user_id][index]
-
-    @classmethod
-    def get_entries(cls, user_id: int) -> list[MedicationJournalEntry]:
-        if user_id not in cls.entries:
-            return []
-        return cls.entries[user_id]
-
-
-@dataclass
 class SlackUserIdentification:
     user_id: int = Field(description="The user's id")
     user_name: str = Field(description="The user's name")
@@ -67,7 +38,7 @@ class SessionDependencies:
     user_info: SlackUserIdentification = Field(
         description='The user\'s information'
     )
-    todays_date: str = date.today().strftime('%Y-%m-%d')
+    todays_date: date = date.today()
 
 
 ########################################################################
@@ -102,33 +73,25 @@ Questions/messages you will most likely handle are:
 """
 
 @agent.instructions
-async def general_instructions() -> str:
-    return medication_assistant_general_instructions
-
-
-@agent.instructions
-async def add_user_name(ctx: RunContext[SessionDependencies]) -> str:
-    return f"The user's name is {ctx.deps.user_info.user_name!r}"
-
-@agent.instructions
-async def add_user_id(ctx: RunContext[SessionDependencies]) -> str:
-    return f"The user's id is {ctx.deps.user_info.user_id!r}"
-
-@agent.instructions
-async def todays_date(ctx: RunContext[SessionDependencies]) -> str:
-    return f"The current date is {ctx.deps.todays_date!r}"
+async def initialization_instructions(ctx: RunContext[SessionDependencies]) -> str:
+    return (
+        f"{medication_assistant_general_instructions}"
+        f"\nThe current date is {ctx.deps.todays_date!r}"
+        f"\nThe user's name is {ctx.deps.user_info.user_name!r}"
+        f"\nThe user's id is {ctx.deps.user_info.user_id!r}"
+    )
 
 ########################################################################
 # Tools
 ########################################################################
 
 @agent.tool
-async def add_medication_journal_entry(
+async def medication_journal_add_entry(
         ctx: RunContext[SessionDependencies],
         medication_name: str,
         medication_frequency: str,
-        medication_start_date: str,
-        medication_end_date: str | None,
+        medication_start_date: date,
+        medication_end_date: date | None,
         medication_notes: str | None
     ) -> MedicationJournalEntry | None:
     """
@@ -142,12 +105,11 @@ async def add_medication_journal_entry(
         medication_notes=medication_notes
     )
     ctx.deps.medication_journal.add_entry(ctx.deps.user_info.user_id, entry)
-    # return entry
-    return ctx.deps.medication_journal.get_entry(ctx.deps.user_info.user_id, -1)
+    return entry
 
 
 @agent.tool
-async def get_medication_journal_entry(
+async def medication_journal_get_entry(
         ctx: RunContext[SessionDependencies],
         index: int
     ) -> MedicationJournalEntry | None:
@@ -158,13 +120,21 @@ async def get_medication_journal_entry(
 
 
 @agent.tool
-async def get_all_medication_journal_entries(
+async def medication_journal_get_all_entries(
         ctx: RunContext[SessionDependencies]
     ) -> list[MedicationJournalEntry]:
     """
     Get all medication journal entries for the current user
     """
     return ctx.deps.medication_journal.get_entries(ctx.deps.user_info.user_id)
+
+
+@agent.tool_plain
+async def image_read_label_medication_bottle() -> ImageUrl:
+    """
+    Read the label on a medication bottle and return the text
+    """
+    return await read_label_medication_bottle()
 
 
 ########################################################################
@@ -177,7 +147,3 @@ async def main():
         medication_journal=MedicationJournal()
     )
     await agent.to_cli(deps=deps)
-
-
-if __name__ == '__main__':
-    asyncio.run(main())

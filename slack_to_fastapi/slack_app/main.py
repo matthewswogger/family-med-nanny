@@ -4,10 +4,16 @@ from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
 import re
 
-from med_nannyai import MedNannyAI, agent
+from med_nannyai import (
+    # MedNannyAI,
+    agent,
+    SessionDependencies,
+    SlackUserIdentification,
+    MedicationJournal
+)
 
 
-med_nannyai = MedNannyAI()
+# med_nannyai = MedNannyAI()
 
 
 # logging.basicConfig(level=logging.DEBUG)
@@ -92,7 +98,11 @@ def handle_message_events(event, client, context, logger):
     llm_user_text = replace_multiple_substrings(llm_user_text, slack_channel_names_map)
 
     # 2) use `MedNannyAI` to craft what will be said to the user etc
-    agent_response = agent.run_sync(llm_user_text)
+    deps = SessionDependencies(
+        user_info=SlackUserIdentification(user_id=123, user_name='John Doe'),
+        medication_journal=MedicationJournal()
+    )
+    agent_response = agent.run_sync(llm_user_text, deps=deps)
 
 
     # 3) send whatever message you need to to the user
