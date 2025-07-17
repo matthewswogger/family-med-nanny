@@ -10,22 +10,6 @@ from utils import get_db, to_chat_message
 from ai import agent
 
 
-router = APIRouter(prefix='/chat')
-
-
-@router.get('/')
-async def get_chat_history_on_ui_loading(
-        database: Annotated[Database, Depends(get_db)]
-    ) -> Response:
-
-    msgs = database.get_messages()
-    return Response(
-        b'\n'.join(json.dumps(to_chat_message(m)).encode('utf-8') for m in msgs),
-        media_type='text/plain',
-    )
-
-
-
 async def stream_messages(user_prompt: str, database: Database):
     """
     Stream messages to the client.
@@ -49,27 +33,26 @@ async def stream_messages(user_prompt: str, database: Database):
     database.add_messages(messages=m_response)
 
 
+router = APIRouter()
 
-@router.post('/')
+DATABASE_DEPENDENCY = Annotated[Database, Depends(get_db)]
+
+@router.get('/chat/')
+async def get_chat_history_on_ui_loading(
+        database: DATABASE_DEPENDENCY
+    ) -> Response:
+
+    msgs = database.get_messages()
+    return Response(
+        b'\n'.join(json.dumps(to_chat_message(m)).encode('utf-8') for m in msgs),
+        media_type='text/plain',
+    )
+
+
+@router.post('/chat/')
 async def post_chat(
         prompt: Annotated[str, Form()],
-        database: Annotated[Database, Depends(get_db)]
+        database: DATABASE_DEPENDENCY
     ) -> StreamingResponse:
-
-    # async def stream_messages():
-    #     yield json.dumps(
-    #             {
-    #                 'role': 'user',
-    #                 'timestamp': datetime.now(tz=timezone.utc).isoformat(),
-    #                 'content': prompt
-    #             }
-    #         ).encode('utf-8') + b'\n'
-
-    #     async with agent.run_stream(prompt, message_history=database.get_messages()) as result:
-    #         async for text in result.stream(debounce_by=0.01):
-    #             m_response = ModelResponse(parts=[TextPart(text)], timestamp=result.timestamp())
-    #             yield json.dumps(to_chat_message(m_response)).encode('utf-8') + b'\n'
-
-    #     database.add_messages(messages=m_response)
 
     return StreamingResponse(stream_messages(prompt, database), media_type='text/plain')
