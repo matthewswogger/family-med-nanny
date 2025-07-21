@@ -1,5 +1,8 @@
 twilio_2fa_recovery_code.txt
 temp.py
+.cursor
+.logfire
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

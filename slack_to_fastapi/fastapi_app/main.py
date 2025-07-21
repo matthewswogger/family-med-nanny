@@ -1,10 +1,15 @@
 from fastapi import FastAPI, Request
+# from fastapi.middleware.trustedhost import TrustedHostMiddleware
 import logging
 
 from slack_app import SLACK_HANDLER
 
+# logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
+
 
 app = FastAPI()
+
 
 @app.get('/')
 async def root():
@@ -13,6 +18,8 @@ async def root():
 @app.post('/slack/events')
 async def slack_events(req: Request):
     return await SLACK_HANDLER.handle(req)
+
+
 
 ##################################################################
 # If I need to work with the raw request I'll use the below code.
