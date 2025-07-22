@@ -5,3 +5,4 @@ aiohttp
 pydantic-ai-slim[openai,anthropic,logfire,evals,duckduckgo,tavily]
 logfire[fastapi,httpx]
 twilio
+pyngrok

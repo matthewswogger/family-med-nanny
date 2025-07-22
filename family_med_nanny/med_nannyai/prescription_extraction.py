@@ -23,8 +23,8 @@ async def read_label_medication_bottle() -> ImageUrl:
     """
     Read the label on a medication bottle and return the text
     """
-    # image_path = '/Users/msmay/Documents/repos/family-med-nanny/slack_to_fastapi/prescription_bottle_one.jpg'
-    image_path = '/Users/msmay/Documents/repos/family-med-nanny/slack_to_fastapi/prescription_bottle_two.jpg'
+    # image_path = '/Users/msmay/Documents/repos/family-med-nanny/static/prescription_bottle_one.jpg'
+    image_path = '/Users/msmay/Documents/repos/family-med-nanny/static/prescription_bottle_two.jpg'
     with open(image_path, 'rb') as image_file:
         b64_image = base64.b64encode(image_file.read()).decode('utf-8')
 
