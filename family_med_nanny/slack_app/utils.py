@@ -5,13 +5,90 @@ from typing import Any
 import asyncio
 from slack_sdk import WebClient
 from typing import Any, Literal
-import functools
+from cachetools import cached, TTLCache
+
+
+
+class GetSlackUserAndChannelInfo:
+    def __init__(
+            self,
+            client: WebClient
+        ):
+        self._client = client
+
+    @cached(cache=TTLCache(maxsize=1, ttl=30))
+    def get_it_all(self) -> tuple[list[dict[str, Any] | None], list[dict[str, Any] | None]]:
+        users = self._query_slack_for_user_ids(self._client)
+        channels = self._query_slack_for_channel_ids(self._client)
+        print('Fetching the users and channels.', flush=True)
+
+        return users, channels
+
+    def _query_slack_for_user_ids(self, client: WebClient) -> list[dict[str, Any] | None]:
+        users = client.users_list(include_locale=True).data['members'] # type: ignore
+
+        users_list = []
+        for user in users:
+            if user['id'] != 'USLACKBOT' and not user['is_bot'] and not user['deleted']:
+
+                filtered_user = {}
+                user_profile = user['profile']
+                if (f := user_profile.get('first_name')) and (l := user_profile.get('last_name')):
+                    filtered_user['user_name'] = f'{f} {l}'
+                else:
+                    filtered_user['user_name'] = user_profile.get('real_name')
+
+                filtered_user['user_id'] = user['id']
+                filtered_user['slack_team_id'] = user['team_id']
+                filtered_user['locale'] = user['locale']
+                filtered_user['user_time_zone_info'] = {
+                    'tz': user['tz'],
+                    'tz_lable': user['tz_label']
+                }
+
+                users_list.append(filtered_user)
+        return users_list
+
+    def _query_slack_for_channel_ids(self, client: WebClient) -> list[dict[str, Any] | None]:
+        channels = client.conversations_list(
+            team_id='T0957BCU8C8',
+            exclude_archived=True,
+            types='public_channel'
+        ).data['channels'] # type: ignore
+
+        # mpim = client.conversations_list(
+        #     team_id='T0957BCU8C8',
+        #     exclude_archived=True, types='mpim'
+        # ).data['channels'] # type: ignore
+
+        # im = client.conversations_list(
+        #     team_id='T0957BCU8C8',
+        #     exclude_archived=True, types='im'
+        # ).data['channels'] # type: ignore
+
+        active_channels = []
+        for channel in channels:
+            if not channel['is_archived']:
+                filtered_channel = {
+                    'id': channel['id'],
+                    'name': channel['name'],
+                    'team_id': channel.get('context_team_id'),
+                    'num_members': channel['num_members'],
+                    'description': channel['purpose']['value']
+                }
+                active_channels.append(filtered_channel)
+        return active_channels
+
 
 
 class SlackHandler:
-    def __init__(self):
+    def __init__(
+            self,
+            client: WebClient
+        ):
+        self.user_and_channel_info = GetSlackUserAndChannelInfo(client=client)
+
         self.after_pad: str = f'{"*"*20}'
-        # self.before_pad: str = f'\n{"*"*20}\n'
         self.before_pad: str = f'\n{self.after_pad}\n'
 
     def handle_commands(self, args):
@@ -26,6 +103,11 @@ class SlackHandler:
         )
 
         # 1) get the things you need from `command`, `context`
+        users_info, channels_info = self.user_and_channel_info.get_it_all()
+
+        enriched_user_ids = EnrichUserIDs(users_info, request_type='command')
+        enriched_channel_ids = EnrichChannelIDs(channels_info, request_type='command')
+
         channel_id = args.command.get('channel_id')
         user_text = args.command.get('text')
         # user_mentions, channel_mentions = parse_slack_mentions(user_text)
@@ -48,8 +130,10 @@ class SlackHandler:
             f'{self.after_pad}'
         )
 
-        # enriched_user_ids = EnrichUserIDs(users_info, request_type='message')
-        # enriched_channel_ids = EnrichChannelIDs(channels_info, request_type='message')
+        users_info, channels_info = self.user_and_channel_info.get_it_all()
+
+        enriched_user_ids = EnrichUserIDs(users_info, request_type='message')
+        enriched_channel_ids = EnrichChannelIDs(channels_info, request_type='message')
 
 
         urls = self._look_for_possible_files_being_uploaded(args.message, strict=False)
@@ -117,6 +201,10 @@ class SlackHandler:
         )
 
         if args.event.get('type') in ['reaction_added']:
+            users_info, channels_info = self.user_and_channel_info.get_it_all()
+
+            enriched_user_ids = EnrichUserIDs(users_info, request_type='event')
+            enriched_channel_ids = EnrichChannelIDs(channels_info, request_type='event')
 
             channel_id = args.event.get('item').get('channel')
             user_reaction = args.event.get('reaction')
@@ -183,105 +271,6 @@ class SlackHandler:
     async def _run_get_files_from_slack_async(self, url_list: list[str]) -> tuple[list[str | None], list[tuple[str, str, Any] | None]]:
         bad_urls, good_files = await self._get_files_from_slack_async(url_list)
         return bad_urls, good_files
-
-
-
-
-
-
-
-
-
-###############################################################################
-###############################################################################
-###############################################################################
-###############################################################################
-###############################################################################
-###############################################################################
-###############################################################################
-###############################################################################
-###############################################################################
-###############################################################################
-###############################################################################
-
-@functools.cache
-class GetSlackUserAndChannelInfo:
-    def __init__(
-            self,
-            client: WebClient
-        ) -> tuple[list[dict[str, Any] | None], list[dict[str, Any] | None]]:
-
-        print('I guess it has not been called yet', flush=True)
-        self.users = self._query_slack_for_user_ids(client)
-        self.channels = self._query_slack_for_channel_ids(client)
-
-    def get_it_all(self):
-        return self.users, self.channels
-
-    # def __call__(
-    #         self,
-    #         client: WebClient
-    #     ) -> tuple[list[dict[str, Any] | None], list[dict[str, Any] | None]]:
-
-    #     users = self._query_slack_for_user_ids(client)
-    #     channels = self._query_slack_for_channel_ids(client)
-
-    #     return users, channels
-
-    def _query_slack_for_user_ids(self, client: WebClient) -> list[dict[str, Any] | None]:
-        users = client.users_list(include_locale=True).data['members'] # type: ignore
-
-        users_list = []
-        for user in users:
-            if user['id'] != 'USLACKBOT' and not user['is_bot'] and not user['deleted']:
-
-                filtered_user = {}
-                user_profile = user['profile']
-                if (f := user_profile.get('first_name')) and (l := user_profile.get('last_name')):
-                    filtered_user['user_name'] = f'{f} {l}'
-                else:
-                    filtered_user['user_name'] = user_profile.get('real_name')
-
-                filtered_user['user_id'] = user['id']
-                filtered_user['slack_team_id'] = user['team_id']
-                filtered_user['locale'] = user['locale']
-                filtered_user['user_time_zone_info'] = {
-                    'tz': user['tz'],
-                    'tz_lable': user['tz_label']
-                }
-
-                users_list.append(filtered_user)
-        return users_list
-
-    def _query_slack_for_channel_ids(self, client: WebClient) -> list[dict[str, Any] | None]:
-        channels = client.conversations_list(
-            team_id='T0957BCU8C8',
-            exclude_archived=True,
-            types='public_channel'
-        ).data['channels'] # type: ignore
-
-        # mpim = client.conversations_list(
-        #     team_id='T0957BCU8C8',
-        #     exclude_archived=True, types='mpim'
-        # ).data['channels'] # type: ignore
-
-        # im = client.conversations_list(
-        #     team_id='T0957BCU8C8',
-        #     exclude_archived=True, types='im'
-        # ).data['channels'] # type: ignore
-
-        active_channels = []
-        for channel in channels:
-            if not channel['is_archived']:
-                filtered_channel = {
-                    'id': channel['id'],
-                    'name': channel['name'],
-                    'team_id': channel.get('context_team_id'),
-                    'num_members': channel['num_members'],
-                    'description': channel['purpose']['value']
-                }
-                active_channels.append(filtered_channel)
-        return active_channels
 
 
 class EnrichUserIDs:

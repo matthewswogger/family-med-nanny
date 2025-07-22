@@ -6,7 +6,7 @@ from slack_sdk import WebClient
 import re
 from typing import Any, Literal
 
-from .utils import SlackHandler, GetSlackUserAndChannelInfo, EnrichUserIDs, EnrichChannelIDs
+from .utils import SlackHandler
 from med_nannyai import Slack_MedNannyAI
 
 
@@ -41,45 +41,23 @@ logging.basicConfig(
     style="{"
 )
 
-
-# https://tools.slack.dev/bolt-python/api-docs/slack_bolt/
-# https://tools.slack.dev/python-slack-sdk/api-docs/slack_sdk/
-# https://api.slack.com/methods
-
-
-# Middleware
-# https://tools.slack.dev/bolt-python/concepts/global-middleware
-#   Comes in a few flavers, need to use probably
-#   that link is an example of middleware to look up user ids in
-#   a system other than slack, like mine for example.
-
-# https://tools.slack.dev/python-slack-sdk/webhook#the-response_url
-#   this shows an example of how to capture ALL events in a single endpoint using flask
-
-# https://tools.slack.dev/python-slack-sdk/web#opening-modals
-#   similar to above, but has no response really
-
-# https://tools.slack.dev/bolt-python/api-docs/slack_bolt/kwargs_injection/args.html
-#   Only have to pass one thing and then it is all acceseable
+slack_bot_token = os.environ.get('SLACK_BOT_TOKEN')
+slack_signing_secret = os.environ.get('SLACK_SIGNING_SECRET')
 
 app = App(
     name='slack_MedNannyAI',
     logger=logger,
-    token=os.environ.get('SLACK_BOT_TOKEN'),
-    signing_secret=os.environ.get('SLACK_SIGNING_SECRET'),
+    token=slack_bot_token,
+    signing_secret=slack_signing_secret,
 )
 SLACK_HANDLER = SlackRequestHandler(app)
 
 
-client = WebClient(token=os.environ.get('SLACK_BOT_TOKEN'))
-# users_info, channels_info = GetSlackUserAndChannelInfo()(client)
-slack_user_and_channel_info = GetSlackUserAndChannelInfo(client)
+handle_slack = SlackHandler(
+    client=WebClient(token=slack_bot_token)
+)
 
-
-######################################################################################
-# Handle Everything
-######################################################################################
-
+pattern = r"[\s\S]*"
 
 # @app.event("team_join")
 # def ask_for_introduction(event, say, client, context, logger):
@@ -89,9 +67,7 @@ slack_user_and_channel_info = GetSlackUserAndChannelInfo(client)
 #     say(text=text, channel=welcome_channel_id)
 
 
-handle_slack = SlackHandler()
 
-pattern = r"[\s\S]*"
 
 @app.event(re.compile(pattern))
 @app.command(re.compile(pattern))
