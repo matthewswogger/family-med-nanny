@@ -6,9 +6,18 @@ from uvicorn import Server, Config
 from pyngrok import ngrok
 from pathlib import Path
 from dotenv import load_dotenv
+import logging
+
+from utils import LogTemplate
 
 load_dotenv()
 
+
+logging.basicConfig(
+    level=logging.INFO,
+    format=LogTemplate(),
+    style="{"
+)
 
 async def run_fastapi():
     config = Config(

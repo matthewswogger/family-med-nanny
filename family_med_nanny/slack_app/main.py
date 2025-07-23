@@ -10,42 +10,42 @@ from .utils import SlackHandler
 from med_nannyai import Slack_MedNannyAI
 
 
-class LogTemplate(str):
-    DEFAULT_TEMPLATE = '{levelname} - {asctime} - {name} - {message}'
-    FORMAT_TEMPLATE = '{levelname:<10}Timestamp: {asctime} : {name} : {message}'
+# class LogTemplate(str):
+#     DEFAULT_TEMPLATE = '{levelname} - {asctime} - {name} - {message}'
+#     FORMAT_TEMPLATE = '{levelname:<10}Timestamp: {asctime} : {name} : {message}'
 
-    def __new__(cls, template=None):
-        if template is None:
-            template = cls.DEFAULT_TEMPLATE
-        return super().__new__(cls, template)
+#     def __new__(cls, template=None):
+#         if template is None:
+#             template = cls.DEFAULT_TEMPLATE
+#         return super().__new__(cls, template)
 
-    def __init__(self, template=None):
-        self.template = template or self.DEFAULT_TEMPLATE
-        super().__init__()
+#     def __init__(self, template=None):
+#         self.template = template or self.DEFAULT_TEMPLATE
+#         super().__init__()
 
-    def format(self, **kwargs):
-        kwargs['asctime'] = kwargs['asctime'].replace(',', '.')
-        kwargs['levelname'] = f"{kwargs['levelname']}:"
+#     def format(self, **kwargs):
+#         kwargs['asctime'] = kwargs['asctime'].replace(',', '.')
+#         kwargs['levelname'] = f"{kwargs['levelname']}:"
 
-        return self.FORMAT_TEMPLATE.format(**kwargs)
+#         return self.FORMAT_TEMPLATE.format(**kwargs)
 
-    def __repr__(self):
-        return f'{super().__repr__()}'
+#     def __repr__(self):
+#         return f'{super().__repr__()}'
 
 
 logger = logging.getLogger(__name__)
 
-logging.basicConfig(
-    level=logging.INFO,
-    format=LogTemplate(),
-    style="{"
-)
+# logging.basicConfig(
+#     level=logging.INFO,
+#     format=LogTemplate(),
+#     style="{"
+# )
 
 slack_bot_token = os.environ.get('SLACK_BOT_TOKEN')
 slack_signing_secret = os.environ.get('SLACK_SIGNING_SECRET')
 
 app = App(
-    name='slack_MedNannyAI',
+    name='the_slack_app',
     logger=logger,
     token=slack_bot_token,
     signing_secret=slack_signing_secret,
@@ -57,20 +57,18 @@ handle_slack = SlackHandler(
     client=WebClient(token=slack_bot_token)
 )
 
-pattern = r"[\s\S]*"
+re_pattern = re.compile(r"[\s\S]*")
 
 # @app.event("team_join")
 # def ask_for_introduction(event, say, client, context, logger):
 #     welcome_channel_id = "C12345"
 #     user_id = event["user"]
-#     text = f"Welcome to the team, <@{user_id}>! :tada: You can introduce yourself in this channel."
+#     text = f"Welcome to the team, <@{user_id}>! :tada: Introduce yourself."
 #     say(text=text, channel=welcome_channel_id)
 
 
-
-
-@app.event(re.compile(pattern))
-@app.command(re.compile(pattern))
+@app.event(re_pattern)
+@app.command(re_pattern)
 def handle_everything(args):
     args.logger.info(
         f'\n{"*"*20}\n'
@@ -87,7 +85,7 @@ def handle_everything(args):
     if args.command: # args.command.get('command') == '/hey'
         handle_slack.handle_commands(args)
 
-    elif args.message:
+    elif args.message: # all standard messages
         handle_slack.handle_messages(args)
 
     elif args.event: # args.event.get('type') == 'reaction_added' OR 'file_shared'

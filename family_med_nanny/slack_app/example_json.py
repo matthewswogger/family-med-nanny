@@ -291,3 +291,42 @@ event = {
     'event_ts': '1753081140.000800'
 }
 
+
+
+users_info = {
+    'U0957BCUP7S': {
+        'user_name': 'Matthew May',
+        'user_id': 'U0957BCUP7S',
+        'slack_team_id': 'T0957BCU8C8',
+        'locale': 'en-US',
+        'user_time_zone_info': {
+            'tz': 'America/New_York',
+            'tz_lable': 'Eastern Daylight Time'
+        }
+    }
+}
+
+channels_info = {
+    'C094D5GPBTM': {
+        'id': 'C094D5GPBTM',
+        'name': 'new-channel',
+        'team_id': 'T0957BCU8C8',
+        'num_members': 1,
+        'description': 'This channel is ... together with your team.'
+    },
+    'C0957BD49H6': {
+        'id': 'C0957BD49H6',
+        'name': 'all-day-of-may',
+        'team_id': 'T0957BCU8C8',
+        'num_members': 2,
+        'description': 'Share announcements ... who deserve some kudos. ⭐'
+    },
+    'C0957BD4UFJ': {
+        'id': 'C0957BD4UFJ',
+        'name': 'social',
+        'team_id': 'T0957BCU8C8',
+        'num_members': 1,
+        'description': 'Other channels ... and show your lighter side. 🎈'
+    }
+}
+

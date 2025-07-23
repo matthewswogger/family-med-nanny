@@ -3,10 +3,13 @@ from dataclasses import dataclass
 from pydantic import Field
 from pydantic_ai import Agent, RunContext, ImageUrl, Tool
 import logfire
+import logging
 
 from .medication_journal import MedicationJournal, MedicationJournalEntry
 from .prescription_extraction import read_label_medication_bottle
 
+
+logger = logging.getLogger(__name__)
 
 logfire.configure()
 logfire.instrument_pydantic_ai()
