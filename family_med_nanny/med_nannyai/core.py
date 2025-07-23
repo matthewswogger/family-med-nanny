@@ -1,7 +1,7 @@
 from datetime import date#, datetime
 from dataclasses import dataclass
 from pydantic import Field
-from pydantic_ai import Agent, RunContext, ImageUrl, Tool
+from pydantic_ai import Agent, RunContext, ImageUrl, Tool, BinaryContent
 import logfire
 import logging
 
@@ -154,14 +154,33 @@ class MedNannyAI:
         self._agent = agent
         self._message_history = []
 
-    def process_user_input(self, user_message: str, user_name: str, user_id: int) -> str:
+    def process_user_input(
+            self,
+            user_message: str,
+            user_name: str,
+            user_id: int,
+            image_files: list[tuple[str, str, str]] | None = None
+        ) -> str:
+
         deps = SessionDependencies(
             user_info=SlackUserIdentification(user_id=user_id, user_name=user_name),
             medication_journal=MedicationJournal()
         )
 
+        # Prepare input content
+        input_content = [user_message]
+
+        # Add image files if provided
+        if image_files:
+            for url, content_type, content in image_files:
+                if content_type.startswith('image/'):
+                    # Decode base64 content back to bytes
+                    import base64
+                    image_bytes = base64.b64decode(content)
+                    input_content.append(BinaryContent(data=image_bytes, media_type=content_type))
+
         agent_response = self._agent.run_sync(
-            user_prompt=user_message,
+            user_prompt=input_content,
             deps=deps,
             message_history=self._message_history
         )
@@ -171,6 +190,7 @@ class MedNannyAI:
         return agent_response.output
 
 Slack_MedNannyAI = MedNannyAI(agent=med_nanny_ai_agent)
+
 
 if __name__ == '__main__':
     # at top of file

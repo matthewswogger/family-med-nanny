@@ -9,6 +9,8 @@ from slack_sdk import WebClient
 from typing import Any, Literal
 from cachetools import cached, TTLCache
 
+from med_nannyai import Slack_MedNannyAI
+
 
 logger = logging.getLogger(__name__)
 
@@ -26,11 +28,11 @@ class GetSlackUserAndChannelInfo:
         users = self._query_slack_for_user_ids(self._client)
         channels = self._query_slack_for_channel_ids(self._client)
 
-        logger.info(
-            f'\n{"*"*2000}\n'
-            f'Fetching the users and channels.\n'
-            f'\n{"*"*2000}\n'
-        )
+        # logger.info(
+        #     f'\n{"*"*2000}\n'
+        #     f'Fetching the users and channels.\n'
+        #     f'\n{"*"*2000}\n'
+        # )
 
         return users, channels
 
@@ -139,21 +141,21 @@ class SlackHandler:
 
     ###################################################################################
     def handle_messages(self, args):
-        args.logger.info(
-            f'{self.before_pad}'
-            f'Message:\n{args.message}\n'
-            f'Event:\n{args.event}\n'
-            f'{self.after_pad}'
-        )
+        # args.logger.info(
+        #     f'{self.before_pad}'
+        #     f'Message:\n{args.message}\n'
+        #     f'Event:\n{args.event}\n'
+        #     f'{self.after_pad}'
+        # )
 
         users_info, channels_info = self.user_and_channel_info.get_it_all()
 
-        args.logger.info(
-            f'{self.before_pad}'
-            f'users_info:\n{users_info}\n'
-            f'channels_info:\n{channels_info}\n'
-            f'{self.after_pad}'
-        )
+        # args.logger.info(
+        #     f'{self.before_pad}'
+        #     f'users_info:\n{users_info}\n'
+        #     f'channels_info:\n{channels_info}\n'
+        #     f'{self.after_pad}'
+        # )
 
         urls = self._look_for_possible_files_being_uploaded(args.message, strict=False)
         bad_urls, good_files = asyncio.run(self._run_get_files_from_slack_async(urls))
@@ -181,7 +183,7 @@ class SlackHandler:
         channel_names_map = {}
         for cid in channel_mentions + [channel_id]:
             if channel_name := channels_info.get(cid, {}).get('name'):
-                channel_names_map[f'<#{cid}|>'] = channel_name
+                channel_names_map[f'<#{cid}|>'] = f'# {channel_name}'
 
 
         def replace_multiple_substrings(text: str, replacements: dict[str, str]) -> str:
@@ -204,17 +206,17 @@ class SlackHandler:
             f'{self.after_pad}'
         )
 
-        # 2) use `MedNannyAI` to craft what will be said to the user etc
-        # med_nanny_response = Slack_MedNannyAI.process_user_input(
-        #     user_message=llm_user_text,
-        #     user_name='Matthew May',
-        #     user_id=123
-        # )
+        med_nanny_response = Slack_MedNannyAI.process_user_input(
+            user_message=llm_user_text,
+            user_name='Matthew May',
+            user_id=123,
+            image_files=good_files
+        )
 
         response = args.client.chat_postMessage(
             channel=channel_id,
-            # text=med_nanny_response
-            text=f'Here is what I got for you: {user_text}',
+            text=med_nanny_response
+            # text=f'Here is what I got for you: {user_text}'
         )
         # response = args.client.chat_postEphemeral(
         #     channel=channel_id,
@@ -392,79 +394,3 @@ def parse_slack_mentions(text: str, parse_type: Literal['users', 'channels']) ->
     elif parse_type == 'channels':
         matches = set(re.findall(r'<#([A-Z0-9]+)(?:\|[^>]*)?>', text))
     return list(matches) or []
-
-
-# def parse_slack_event(event: dict[str, Any]):
-#     user_text: str = event.get('text', '')
-#     channel_id: str | None = event.get('channel')
-#     user_id: str | None = event.get('user')
-#     event_ts: str | None = event.get('event_ts') or event.get('ts')
-#     user_mentions, channel_mentions = parse_slack_mentions(user_text)
-
-
-
-
-
-
-
-
-#     all_slack_user_ids = ['U0957BCUP7S']
-#     user_name_map = lambda x: f'<@{x}>'
-#     slack_user_names_map = {
-#         user_name_map('U0957BCUP7S'): 'Matthew May',
-#     }
-
-    # # client.conversations_list : Lists all channels in a Slack team.
-    #     # x = client.conversations_list(
-    #     #     team_id='T0957BCU8C8',
-    #     #     exclude_archived=True,
-    #     #     types='public_channel,private_channel,mpim,im'
-    #     # )
-    #     # x.data['channels']
-    # #  conversations.info  ,    conversations.members
-    # all_slack_channel_ids = ['C0957BD4UFJ', 'C0957BD49H6']
-    # channel_name_map = lambda x: f'<#{x}|>'
-
-    # for i in all_slack_channel_ids:
-    # slack_channel_names_map = {
-    #     channel_name_map('C0957BD4UFJ'): '#social',
-    #     channel_name_map('C0957BD49H6'): '#all-day-of-may'
-    # }
-
-
-
-#     return
-
-
-
-
-
-
-
-# def replacemy_func_multiple_substrings(
-#         text: str,
-#         endpoint_type: Literal['command_hey', 'event_message']
-#     ) -> str:
-#     if endpoint_type == 'command_hey':
-#         pass
-#     elif endpoint_type == 'event_message':
-#         user_name_map = lambda x: f'<@{x}>'
-#         channel_name_map = lambda x: f'<#{x}|>'
-
-#         slack_user_names_map = {
-#             user_name_map('U0957BCUP7S'): 'Matthew May',
-#         }
-#         slack_channel_names_map = {
-#             channel_name_map('C0957BD4UFJ'): '#social',
-#             channel_name_map('C0957BD49H6'): '#all-day-of-may'
-#         }
-
-#     llm_user_text = replace_multiple_substrings(text, slack_user_names_map)
-#     llm_user_text = replace_multiple_substrings(llm_user_text, slack_channel_names_map)
-
-#     return llm_user_text
-
-
-
-
-
