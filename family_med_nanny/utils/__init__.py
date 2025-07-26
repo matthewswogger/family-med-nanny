@@ -20,3 +20,24 @@ class LogTemplate(str):
 
     def __repr__(self):
         return f'{super().__repr__()}'
+
+
+def async_cached(cache):
+    """
+    Async-compatible caching decorator that caches the result, not the coroutine.
+    """
+    def decorator(func):
+        async def wrapper(*args, **kwargs):
+            # Create a cache key based on function name only
+            cache_key = func.__name__
+
+            # Check if result is in cache
+            if cache_key in cache:
+                return cache[cache_key]
+
+            # Execute the function and cache the result
+            result = await func(*args, **kwargs)
+            cache[cache_key] = result
+            return result
+        return wrapper
+    return decorator

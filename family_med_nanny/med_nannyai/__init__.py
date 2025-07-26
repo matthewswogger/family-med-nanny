@@ -1,1 +1,1 @@
-from .core import Slack_MedNannyAI
+from .adapters import Slack_MedNannyAI

@@ -1,13 +1,10 @@
 import os
 import logging
-from slack_bolt import App
-from slack_bolt.adapter.fastapi import SlackRequestHandler
-from slack_sdk import WebClient
+from slack_bolt.async_app import AsyncApp
+from slack_bolt.adapter.fastapi.async_handler import AsyncSlackRequestHandler
 import re
-# from typing import Any, Literal
 
 from .utils import SlackHandler
-# from med_nannyai import Slack_MedNannyAI
 
 
 logger = logging.getLogger(__name__)
@@ -16,71 +13,64 @@ logger = logging.getLogger(__name__)
 slack_bot_token = os.environ.get('SLACK_BOT_TOKEN')
 slack_signing_secret = os.environ.get('SLACK_SIGNING_SECRET')
 
-app = App(
+app = AsyncApp(
     name='the_slack_app',
     logger=logger,
     token=slack_bot_token,
     signing_secret=slack_signing_secret,
 )
-SLACK_HANDLER = SlackRequestHandler(app)
+SLACK_HANDLER = AsyncSlackRequestHandler(app)
 
 
-handle_slack = SlackHandler(
-    client=WebClient(token=slack_bot_token)
-)
+handle_slack = SlackHandler()
 
 re_pattern = re.compile(r"[\s\S]*")
-
-# @app.event("team_join")
-# def ask_for_introduction(event, say, client, context, logger):
-#     welcome_channel_id = "C12345"
-#     user_id = event["user"]
-#     text = f"Welcome to the team, <@{user_id}>! :tada: Introduce yourself."
-#     say(text=text, channel=welcome_channel_id)
 
 
 @app.event(re_pattern)
 @app.command(re_pattern)
-def handle_everything(args):
+async def handle_everything(args):
     # args.logger.info(
     #     f'\n{"*"*20}\n'
-    #     f' Command present: {args.command is not None}\n'
-    #     f' Message present: {args.message is not None}\n'
-    #     f'   Event present: {args.event is not None}\n'
-    #     f' Options present: {args.options is not None}\n'
-    #     f'Shortcut present: {args.shortcut is not None}\n'
-    #     f'  Action present: {args.action is not None}\n'
-    #     f'    View present: {args.view is not None}\n'
+    #     f' Command: {args.command if args.command is not None else False}\n'
+    #     f' Message: {args.message if args.message is not None else False}\n'
+    #     f'   Event: {args.event if args.event is not None else False}\n'
+    #     f' Options: {args.options if args.options is not None else False}\n'
+    #     f'Shortcut: {args.shortcut if args.shortcut is not None else False}\n'
+    #     f'  Action: {args.action if args.action is not None else False}\n'
+    #     f'    View: {args.view if args.view is not None else False}\n'
     #     f'{"*"*20}'
     # )
 
     if args.command: # args.command.get('command') == '/hey'
-        handle_slack.handle_commands(args)
+        await handle_slack.handle_commands(args)
 
     elif args.message: # all standard messages
-        handle_slack.handle_messages(args)
+        await handle_slack.handle_messages(args)
 
-    elif args.event: # args.event.get('type') == 'reaction_added' OR 'file_shared'
-        handle_slack.handle_events(args)
+    elif args.event:
+        if args.event.get('type') == 'team_join':
+            await handle_slack.handle_team_join(args)
+        else: # args.event.get('type') == 'reaction_added' OR 'file_shared'
+            await handle_slack.handle_events(args)
 
     else: # what didn't I cover?
         args.logger.info(
             f'\n{"*"*20}\n'
-            'THIS IS SOMETHING I HAVEN\'T COVERED YET\n'
-            f' Command: {args.command}\n'
-            f' Message: {args.message}\n'
-            f'   Event: {args.event}\n'
-            f' Options: {args.options}\n'
-            f'Shortcut: {args.shortcut}\n'
-            f'  Action: {args.action}\n'
-            f'    View: {args.view}\n'
+            'THIS IS SOMETHING I HAVE NOT COVERED YET\n'
+            f' Command: {args.command if args.command is not None else False}\n'
+            f' Message: {args.message if args.message is not None else False}\n'
+            f'   Event: {args.event if args.event is not None else False}\n'
+            f' Options: {args.options if args.options is not None else False}\n'
+            f'Shortcut: {args.shortcut if args.shortcut is not None else False}\n'
+            f'  Action: {args.action if args.action is not None else False}\n'
+            f'    View: {args.view if args.view is not None else False}\n'
             f'{"*"*20}'
         )
 
 
-
 @app.error
-def custom_error_handler(error, body, logger):
+async def custom_error_handler(error, body, logger):
     logger.exception(f'Error: {error}')
     logger.info(f'Request body: {body}')
 

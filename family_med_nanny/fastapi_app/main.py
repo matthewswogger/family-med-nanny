@@ -15,8 +15,5 @@ async def root():
 
 @app.post('/slack/events')
 async def slack_events(req: Request):
-    s = '*'*100
-    # logger.info(f'\n{s}\n{req}\n{s}\n')
     sh = await SLACK_HANDLER.handle(req)
-    # logger.info(f'\n{s}\n{sh}\n{s}\n')
     return sh

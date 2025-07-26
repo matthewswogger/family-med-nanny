@@ -1,12 +1,12 @@
 from datetime import date#, datetime
 from dataclasses import dataclass
 from pydantic import Field
-from pydantic_ai import Agent, RunContext, ImageUrl, Tool, BinaryContent
+from pydantic_ai import Agent, RunContext, Tool, BinaryContent, ImageUrl
 import logfire
 import logging
 
-from .medication_journal import MedicationJournal, MedicationJournalEntry
-from .prescription_extraction import read_label_medication_bottle
+from .medication_journal import MedicationJournals, MedicationJournal, MedicationJournalEntry
+# from .prescription_extraction import read_label_medication_bottle
 
 
 logger = logging.getLogger(__name__)
@@ -29,14 +29,13 @@ class SlackUserIdentification:
 class SessionDependencies:
     medication_journal: MedicationJournal
     user_info: SlackUserIdentification = Field(
-        description='The user\'s information'
+        description="The user's information"
     )
     todays_date: date = date.today()
 
 ########################################################################
 # Tools
 ########################################################################
-
 async def medication_journal_add_entry(
         ctx: RunContext[SessionDependencies],
         medication_name: str,
@@ -78,18 +77,18 @@ async def medication_journal_get_all_entries(
     return ctx.deps.medication_journal.get_entries(ctx.deps.user_info.user_id)
 
 
-async def image_read_label_medication_bottle() -> ImageUrl:
-    """
-    Read the label on a medication bottle and return the text
-    """
-    return await read_label_medication_bottle()
+# async def image_read_label_medication_bottle() -> ImageUrl:
+#     """
+#     Read the label on a medication bottle and return the text
+#     """
+#     return await read_label_medication_bottle()
 
 
 tools = [
     Tool(medication_journal_add_entry, takes_ctx=True),
     Tool(medication_journal_get_entry, takes_ctx=True),
     Tool(medication_journal_get_all_entries, takes_ctx=True),
-    Tool(image_read_label_medication_bottle, takes_ctx=False),
+    # Tool(image_read_label_medication_bottle, takes_ctx=False),
 ]
 
 ########################################################################
@@ -154,7 +153,8 @@ class MedNannyAI:
         self._agent = agent
         self._message_history = []
 
-    def process_user_input(
+    # def process_user_input(
+    async def process_user_input(
             self,
             user_message: str,
             user_name: str,
@@ -179,7 +179,8 @@ class MedNannyAI:
                     image_bytes = base64.b64decode(content)
                     input_content.append(BinaryContent(data=image_bytes, media_type=content_type))
 
-        agent_response = self._agent.run_sync(
+        # agent_response = self._agent.run_sync(
+        agent_response = await self._agent.run(
             user_prompt=input_content,
             deps=deps,
             message_history=self._message_history
@@ -192,23 +193,23 @@ class MedNannyAI:
 Slack_MedNannyAI = MedNannyAI(agent=med_nanny_ai_agent)
 
 
-if __name__ == '__main__':
-    # at top of file
-    med_nanny = MedNannyAI(agent=med_nanny_ai_agent)
+# if __name__ == '__main__':
+#     # at top of file
+#     med_nanny = MedNannyAI(agent=med_nanny_ai_agent)
 
-    # user message comes in
+#     # user message comes in
 
-        # process user message to get out required info
-        #   - user_id: we will always be told who the user is
-        #           - slack id
-        #           - phone number
-        #           - etc
-        #   - user_name: will always be able to get it, sometimes given it
-        #           - slack often gives it
-        #               - if not, the slack id will give us the ability to get it
-        #           - phone number gives the ability to get it
+#         # process user message to get out required info
+#         #   - user_id: we will always be told who the user is
+#         #           - slack id
+#         #           - phone number
+#         #           - etc
+#         #   - user_name: will always be able to get it, sometimes given it
+#         #           - slack often gives it
+#         #               - if not, the slack id will give us the ability to get it
+#         #           - phone number gives the ability to get it
 
-    med_nanny_response = med_nanny.process_user_input('I need help.', 'Matthew May', 123)
+#     med_nanny_response = med_nanny.process_user_input('I need help.', 'Matthew May', 123)
 
 
 

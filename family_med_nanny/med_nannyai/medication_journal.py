@@ -1,49 +1,83 @@
-# For each medication, we will have a journal entry.
+from dataclasses import dataclass, field
+from datetime import date, datetime, timedelta
 
-# The journal entry will have the following fields:
-# - medication_name
-# - medication_dosage
-# - medication_frequency
-# - medication_start_date
-# - medication_end_date
-# - medication_notes
-# - medication_refills_left
-# - medication_refills_needed
-# - if_medication_was_taken_at_correct_time
 
-# each family member will have an individual journal where journal entries are tracked.
+@dataclass(frozen=True)
+class MedNannyAIUserID:
+    id: str
+    name: str
 
-from dataclasses import dataclass
-from pydantic import Field
-from datetime import date
+@dataclass
+class Medication:
+    """
+    A medication is a single medication that a user is taking.
+    """
+    name: str
+    frequency: str
+    start_date: date
+    end_date: date | None = None
+    number_of_refills: int | None = None
+    refills_expire_at: date | None = None
+    # taken_at_correct_time: bool | None = None
+    notes: str | None = None
+    added_at: datetime = field(default_factory=datetime.now)
+    modified_at: datetime | None = None
+
+@dataclass
+class MedicationJournal:
+    """
+    A medication journal is a collection of medications that a unique user is taking, or has taken.
+    """
+    medications: dict[str, Medication] | dict[None, None] = field(default_factory=dict)
+
+    def add_medication(self, medication: Medication):
+        if medication.name not in self.medications:
+            self.medications[medication.name] = medication
+        else:
+            raise ValueError(f"Entry with name {medication.name!r} already exists in your journal")
+
+    def get_medication(self, medication_name: str) -> Medication | None:
+        return self.medications.get(medication_name)
+
+    def delete_medication(self, medication_name: str) -> Medication | None:
+        return self.medications.pop(medication_name, None)
 
 
 @dataclass
-class MedicationJournalEntry:
-    medication_name: str = Field(description='The name of the medication')
-    medication_frequency: str = Field(description='The frequency of the medication')
-    medication_start_date: date = Field(description='The start date of the medication')
-    medication_end_date: date | None = Field(default=None, description='The end date of the medication')
-    medication_notes: str | None = Field(default=None, description='Any notes about the medication')
+class MedicationJournals:
+    journals: dict[MedNannyAIUserID, MedicationJournal] | dict[None, None] = field(default_factory=dict)
+
+    def add_journal(self, med_nanny_user_id: MedNannyAIUserID):
+        """
+        Add a new journal for a user if it doesn't exist.
+        """
+        if med_nanny_user_id not in self.journals:
+            self.journals[med_nanny_user_id] = MedicationJournal()
+
+    def get_journal(self, med_nanny_user_id: MedNannyAIUserID) -> MedicationJournal:
+        """
+        Get user journal.
+        """
+        if not self.journals.get(med_nanny_user_id):
+            self.add_journal(med_nanny_user_id)
+        return self.journals[med_nanny_user_id]
+
+    def add_medication(self, med_nanny_user_id: MedNannyAIUserID, medication: Medication):
+        """
+        Add a medication to a user's journal.
+        """
+        self.get_journal(med_nanny_user_id).add_medication(medication)
 
 
-class MedicationJournal:
-    entries: dict[int, list[MedicationJournalEntry]] = {}
+    def get_medication(self, med_nanny_user_id: MedNannyAIUserID, medication_name: str) -> Medication | None:
+        """
+        Get a medication from a user's journal.
+        """
+        return self.get_journal(med_nanny_user_id).get_medication(medication_name)
 
-    @classmethod
-    def add_entry(cls, user_id: int, entry: MedicationJournalEntry):
-        if user_id not in cls.entries:
-            cls.entries[user_id] = []
-        cls.entries[user_id].append(entry)
+    def delete_medication(self, med_nanny_user_id: MedNannyAIUserID, medication_name: str) -> Medication | None:
+        """
+        Delete a medication from a user's journal.
+        """
+        return self.get_journal(med_nanny_user_id).delete_medication(medication_name)
 
-    @classmethod
-    def get_entry(cls, user_id: int, index: int) -> MedicationJournalEntry | None:
-        if user_id not in cls.entries or index >= len(cls.entries[user_id]):
-            return None
-        return cls.entries[user_id][index]
-
-    @classmethod
-    def get_entries(cls, user_id: int) -> list[MedicationJournalEntry]:
-        if user_id not in cls.entries:
-            return []
-        return cls.entries[user_id]
